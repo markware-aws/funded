@@ -1,0 +1,29 @@
+# Node
+node_modules/
+.next/
+out/
+.turbo/
+*.tsbuildinfo
+
+# Python
+__pycache__/
+*.py[cod]
+.venv/
+*.egg-info/
+dist/
+build/
+BE/package/
+
+# Env
+.env
+.env.local
+.env.*.local
+.env.docker
+.env.*
+
+# AWS
+cdk.out/
+
+.claude
+/scripts
+plan.md
