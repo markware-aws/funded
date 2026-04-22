@@ -10,7 +10,7 @@ import { Project } from "@/types";
 
 function ProjectItem({ project }: { project: Project }) {
   const { user, isAuthenticated } = useAuth();
-  const { toggle } = useLike(project.projectId);
+  const { toggle } = useLike(project.slug, project.projectId);
   return (
     <ProjectCard
       project={project}

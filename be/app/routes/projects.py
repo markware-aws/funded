@@ -1,14 +1,18 @@
+import re
 import uuid
+import unicodedata
 from datetime import datetime, timezone
 from typing import Optional
 from fastapi import APIRouter, Depends, HTTPException, Query
 from boto3.dynamodb.conditions import Key
+from botocore.exceptions import ClientError
 import base64, json
 
 from app.db import get_table
 from app.auth import get_current_user, require_auth
 from app.keys import (
     project_pk, PROJECT_SK, user_pk, USER_SK,
+    slug_pk, SLUG_SK,
     gsi1_project_pk, gsi1_likes_sk,
     gsi2_user_pk, gsi3_category_pk,
     GSI1_PK, GSI1_SK, GSI2_PK, GSI2_SK, GSI3_PK, GSI3_SK,
@@ -18,6 +22,31 @@ from app.keys import (
 from app.models.project import Project, CreateProjectInput, UpdateProjectInput
 
 router = APIRouter(prefix="/projects", tags=["projects"])
+
+
+def _slugify(name: str) -> str:
+    name = unicodedata.normalize("NFKD", name).encode("ascii", "ignore").decode("ascii")
+    name = re.sub(r"[^a-z0-9]+", "-", name.lower()).strip("-")
+    return name
+
+
+def _reserve_slug(table, name: str, project_id: str) -> str:
+    base = _slugify(name) or project_id[:8]
+    slug = base
+    for i in range(2, 20):
+        try:
+            table.put_item(
+                Item={"PK": slug_pk(slug), "SK": SLUG_SK, "projectId": project_id},
+                ConditionExpression="attribute_not_exists(PK)",
+            )
+            return slug
+        except ClientError as e:
+            if e.response["Error"]["Code"] != "ConditionalCheckFailedException":
+                raise
+            slug = f"{base}-{i}"
+    slug = f"project-{project_id[:8]}"
+    table.put_item(Item={"PK": slug_pk(slug), "SK": SLUG_SK, "projectId": project_id})
+    return slug
 
 
 def _now() -> str:
@@ -100,6 +129,7 @@ def create_project(body: CreateProjectInput, claims: dict = Depends(require_auth
 
     project_id = str(uuid.uuid4())
     now = _now()
+    slug = _reserve_slug(table, body.name, project_id)
     item = {
         "PK": project_pk(project_id), "SK": PROJECT_SK,
         GSI1_PK: gsi1_project_pk(), GSI1_SK: gsi1_likes_sk(0),
@@ -108,6 +138,7 @@ def create_project(body: CreateProjectInput, claims: dict = Depends(require_auth
         GSI5_PK: "REVIEW#draft", GSI5_SK: now,
         "projectId": project_id,
         "userId": user_id,
+        "slug": slug,
         **body.model_dump(),
         "likeCount": 0,
         "reviewStatus": "draft",
@@ -140,19 +171,31 @@ def submit_project(project_id: str, claims: dict = Depends(require_auth)):
     return {"submitted": True}
 
 
-@router.get("/{project_id}")
+@router.get("/{project_ref}")
 def get_project(
-    project_id: str,
+    project_ref: str,
     claims: Optional[dict] = Depends(get_current_user),
 ):
     table = get_table()
-    project = _get_project(table, project_id)
+    slug_item = table.get_item(Key={"PK": slug_pk(project_ref), "SK": SLUG_SK}).get("Item")
+    project = _get_project(table, slug_item["projectId"] if slug_item else project_ref)
     if not project:
         raise HTTPException(404, detail={"code": "NOT_FOUND", "message": "Project not found"})
     user_id = claims.get("sub") if claims else None
     if project["reviewStatus"] != "published" and user_id != project["userId"]:
         raise HTTPException(404, detail={"code": "NOT_FOUND", "message": "Project not found"})
     return _hydrate_liked(table, project, user_id)
+
+
+def _check_lock(project: dict) -> None:
+    locked_until = project.get("evaluationLockedUntil")
+    if locked_until:
+        lock_dt = datetime.fromisoformat(locked_until)
+        if datetime.now(timezone.utc) < lock_dt:
+            raise HTTPException(
+                423,
+                detail={"code": "PROJECT_LOCKED", "message": f"Project is locked until {locked_until}"},
+            )
 
 
 @router.put("/{project_id}")
@@ -167,6 +210,7 @@ def update_project(
         raise HTTPException(404, detail={"code": "NOT_FOUND", "message": "Project not found"})
     if project["userId"] != claims["sub"]:
         raise HTTPException(403, detail={"code": "NOT_OWNER", "message": "Not the project owner"})
+    _check_lock(project)
 
     updates = {k: v for k, v in body.model_dump().items() if v is not None}
     if not updates:
@@ -199,5 +243,6 @@ def delete_project(project_id: str, claims: dict = Depends(require_auth)):
         raise HTTPException(404, detail={"code": "NOT_FOUND", "message": "Project not found"})
     if project["userId"] != claims["sub"]:
         raise HTTPException(403, detail={"code": "NOT_OWNER", "message": "Not the project owner"})
+    _check_lock(project)
     table.delete_item(Key={"PK": project_pk(project_id), "SK": PROJECT_SK})
     return {"deleted": True}

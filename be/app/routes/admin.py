@@ -72,6 +72,20 @@ def reject_project(project_id: str, reason: str = "", claims: dict = Depends(req
     return {"rejected": True}
 
 
+@router.put("/projects/{project_id}/unlock")
+def unlock_project(project_id: str, claims: dict = Depends(require_admin)):
+    table = get_table()
+    project = table.get_item(Key={"PK": project_pk(project_id), "SK": PROJECT_SK}).get("Item")
+    if not project:
+        raise HTTPException(404, detail={"code": "NOT_FOUND", "message": "Project not found"})
+    table.update_item(
+        Key={"PK": project_pk(project_id), "SK": PROJECT_SK},
+        UpdateExpression="REMOVE evaluationLockedUntil SET updatedAt = :now",
+        ExpressionAttributeValues={":now": _now()},
+    )
+    return {"unlocked": True}
+
+
 @router.get("/users")
 def list_users(claims: dict = Depends(require_admin)):
     table = get_table()

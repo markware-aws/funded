@@ -25,7 +25,7 @@ export default function AdminPage() {
   return (
     <Layout>
       <Head><title>Admin — funded.gr</title></Head>
-      <div className="max-w-4xl mx-auto">
+      <div>
         <h1 className="text-2xl font-bold mb-6">Review Queue</h1>
 
         {queueLoading ? (
@@ -38,7 +38,7 @@ export default function AdminPage() {
               <div key={p.projectId} className="rounded-xl border border-gray-200 bg-white p-5">
                 <div className="flex items-start justify-between gap-4">
                   <div className="min-w-0">
-                    <Link href={`/projects/${p.projectId}`} target="_blank"
+                    <Link href={`/projects/${p.slug}`} target="_blank"
                       className="font-semibold text-gray-900 hover:text-brand-600">
                       {p.name}
                     </Link>

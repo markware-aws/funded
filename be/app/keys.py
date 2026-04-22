@@ -52,3 +52,8 @@ def gsi4_score_sk(score: int) -> str:
 
 def gsi5_review_pk(review_status: str) -> str:
     return f"REVIEW#{review_status}"
+
+def slug_pk(slug: str) -> str:
+    return f"SLUG#{slug}"
+
+SLUG_SK = "SLUG"

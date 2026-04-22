@@ -52,7 +52,7 @@ export default function ProfilePage() {
   return (
     <Layout>
       <Head><title>Profile — funded.gr</title></Head>
-      <div className="max-w-3xl mx-auto">
+      <div>
         <h1 className="text-2xl font-bold mb-6">{user.name}</h1>
 
         <div className="flex gap-4 border-b border-gray-200 mb-6">

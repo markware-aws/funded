@@ -19,7 +19,7 @@ export default function PublicProfilePage() {
   return (
     <Layout>
       <Head><title>{user.name} — funded.gr</title></Head>
-      <div className="max-w-3xl mx-auto">
+      <div>
         <div className="flex items-center gap-4 mb-8">
           {user.avatarUrl && <img src={user.avatarUrl} className="w-16 h-16 rounded-full" alt={user.name} />}
           <div>

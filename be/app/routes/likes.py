@@ -1,6 +1,7 @@
 from datetime import datetime, timezone
 from fastapi import APIRouter, Depends, HTTPException
 from boto3.dynamodb.conditions import Attr
+from botocore.exceptions import ClientError
 
 from app.db import get_table
 from app.auth import require_auth
@@ -28,7 +29,6 @@ def like_project(project_id: str, claims: dict = Depends(require_auth)):
     if not project or project["reviewStatus"] != "published":
         raise HTTPException(404, detail={"code": "NOT_FOUND", "message": "Project not found"})
 
-    # Idempotent like
     try:
         table.put_item(
             Item={
@@ -37,8 +37,10 @@ def like_project(project_id: str, claims: dict = Depends(require_auth)):
             },
             ConditionExpression=Attr("PK").not_exists(),
         )
-    except Exception:
-        pass  # already liked
+    except ClientError as e:
+        if e.response["Error"]["Code"] == "ConditionalCheckFailedException":
+            return {"likeCount": project.get("likeCount", 0)}
+        raise
 
     res = table.update_item(
         Key={"PK": project_pk(project_id), "SK": PROJECT_SK},

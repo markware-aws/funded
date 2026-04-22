@@ -1,4 +1,5 @@
 from datetime import datetime, timezone
+from botocore.exceptions import ClientError
 from app.db import get_table
 from app.keys import user_pk, USER_SK
 from boto3.dynamodb.conditions import Attr
@@ -22,7 +23,8 @@ def handle(event: dict, context) -> dict:
             },
             ConditionExpression=Attr("PK").not_exists(),
         )
-    except Exception:
-        pass  # idempotent
+    except ClientError as e:
+        if e.response["Error"]["Code"] != "ConditionalCheckFailedException":
+            raise  # real failure — let Cognito surface the error
 
     return event

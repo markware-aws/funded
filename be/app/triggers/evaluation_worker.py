@@ -1,4 +1,4 @@
-from datetime import datetime, timezone
+from datetime import datetime, timezone, timedelta
 from pydantic_ai import Agent
 from pydantic_ai.models.openai import OpenAIModel
 
@@ -33,13 +33,15 @@ Features: {', '.join(project.get('features', []))}
 Website: {project.get('websiteUrl') or 'Not provided'}
 GitHub: {project.get('githubUrl') or 'Not provided'}
 GitHub Stars: {project.get('githubStars', 'N/A')}
+Monthly Revenue: {project.get('monthlyRevenue') or 'Not disclosed'} (€)
+Monthly Users: {project.get('monthlyUsers') or 'Not disclosed'}
 Category: {project['category']}
 
 DIMENSIONS:
 1. problemClarity (20%) — clear problem, obvious target user
 2. originality (20%) — differentiator, Greek/EU context
 3. completenessDeployment (25%) — live site, active GitHub, deployed vs idea
-4. commercialViability (20%) — monetization path, B2B preferred
+4. commercialViability (20%) — monetization path, B2B preferred; if monthlyRevenue provided weight it heavily ("20k-50k"/"50k+" are very strong signals); use monthlyUsers to validate traction claims
 5. presentationQuality (15%) — well-written, credible
 
 totalScore = weighted average, rounded to nearest int.
@@ -68,11 +70,13 @@ def handle(event: dict, context) -> None:
             completedAt=now,
         )
 
+        locked_until = (datetime.now(timezone.utc) + timedelta(days=30)).isoformat()
+
         table.update_item(
             Key={"PK": project_pk(project_id), "SK": PROJECT_SK},
             UpdateExpression=(
                 "SET evaluationStatus = :s, evaluation = :e, updatedAt = :now,"
-                " #gsi4pk = :g4pk, #gsi4sk = :g4sk"
+                " #gsi4pk = :g4pk, #gsi4sk = :g4sk, evaluationLockedUntil = :lock"
             ),
             ExpressionAttributeNames={"#gsi4pk": GSI4_PK, "#gsi4sk": GSI4_SK},
             ExpressionAttributeValues={
@@ -81,6 +85,7 @@ def handle(event: dict, context) -> None:
                 ":now": now,
                 ":g4pk": "PROJECT",
                 ":g4sk": gsi4_score_sk(evaluation_result.totalScore),
+                ":lock": locked_until,
             },
         )
     except Exception as e:

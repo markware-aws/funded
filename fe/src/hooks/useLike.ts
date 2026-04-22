@@ -2,12 +2,11 @@ import { useSWRConfig } from "swr";
 import { api, ApiClientError } from "@/lib/api";
 import { Project } from "@/types";
 
-export function useLike(projectId: string) {
+export function useLike(slug: string, projectId: string) {
   const { mutate } = useSWRConfig();
-  const cacheKey = `/projects/${projectId}`;
+  const cacheKey = `/projects/${slug}`;
 
   const toggle = async (currentlyLiked: boolean, currentCount: number) => {
-    // Optimistic update
     mutate(
       cacheKey,
       (prev: Project | undefined) =>

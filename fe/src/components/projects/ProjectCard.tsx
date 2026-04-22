@@ -42,7 +42,7 @@ export function ProjectCard({ project, onLike, canLike }: Props) {
               {project.category}
             </span>
           </div>
-          <Link href={`/projects/${project.projectId}`}>
+          <Link href={`/projects/${project.slug}`}>
             <h3 className="font-bold text-xl tracking-tight text-gray-900 hover:text-blue-600 transition truncate">
               {project.name}
             </h3>

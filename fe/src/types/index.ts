@@ -4,6 +4,8 @@ export type UserRole = "member" | "admin";
 export type ReviewStatus = "draft" | "pending_review" | "published" | "rejected";
 export type EvaluationStatus = "not_requested" | "pending" | "complete" | "failed";
 export type ReadinessLabel = "idea" | "prototype" | "launched" | "scalable";
+export type MonthlyRevenue = "pre-revenue" | "<1k" | "1k-5k" | "5k-20k" | "20k-50k" | "50k+";
+export type MonthlyUsers = "<100" | "100-1k" | "1k-10k" | "10k-50k" | "50k+";
 export type ProjectCategory =
   | "saas" | "marketplace" | "developer-tool" | "fintech" | "health"
   | "education" | "e-commerce" | "ai-ml" | "mobile-app" | "other";
@@ -63,6 +65,7 @@ export interface PublicUser {
 
 export interface Project {
   projectId: string;
+  slug: string;
   userId: string;
   name: string;
   tagline: string;
@@ -75,6 +78,8 @@ export interface Project {
   githubLastUpdated?: string;
   contactEmail: string;
   contactNote?: string;
+  monthlyRevenue?: MonthlyRevenue;
+  monthlyUsers?: MonthlyUsers;
   category: ProjectCategory;
   status: ProjectStatus;
   likeCount: number;
@@ -82,6 +87,7 @@ export interface Project {
   reviewStatus: ReviewStatus;
   evaluationStatus: EvaluationStatus;
   evaluation?: Evaluation;
+  evaluationLockedUntil?: string;
   screenshotUrl?: string;
   createdAt: string;
   updatedAt: string;
@@ -97,6 +103,8 @@ export interface CreateProjectInput {
   githubUrl?: string;
   contactEmail: string;
   contactNote?: string;
+  monthlyRevenue?: MonthlyRevenue;
+  monthlyUsers?: MonthlyUsers;
   category: ProjectCategory;
   status: ProjectStatus;
   screenshotUrl?: string;
@@ -109,7 +117,7 @@ export type UpdateProjectInput = Partial<CreateProjectInput>;
 export type ApiErrorCode =
   | "NOT_FOUND" | "UNAUTHORIZED" | "FORBIDDEN" | "BAD_REQUEST" | "INTERNAL_ERROR"
   | "MUST_HAVE_PROJECT" | "NOT_OWNER" | "EVALUATION_ALREADY_REQUESTED"
-  | "PROJECT_NOT_PUBLISHED" | "ADMIN_ONLY";
+  | "PROJECT_NOT_PUBLISHED" | "ADMIN_ONLY" | "PROJECT_LOCKED";
 
 export interface ApiError {
   code: ApiErrorCode;

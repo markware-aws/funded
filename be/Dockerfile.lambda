@@ -1,0 +1,14 @@
+FROM public.ecr.aws/lambda/python:3.12 AS builder
+
+RUN dnf install -y gcc gcc-c++ make python3-devel && dnf clean all
+
+COPY requirements.txt .
+RUN pip install --no-cache-dir --target /install -r requirements.txt
+
+FROM public.ecr.aws/lambda/python:3.12
+
+COPY --from=builder /install /var/task
+COPY app/ app/
+COPY lambda_handler.py .
+
+CMD ["lambda_handler.handler"]

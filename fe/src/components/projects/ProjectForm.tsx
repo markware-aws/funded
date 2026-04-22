@@ -1,7 +1,7 @@
 import { useRef, useState } from "react";
 import { Upload, X } from "lucide-react";
 import { CreateProjectInput, Project } from "@/types";
-import { PROJECT_CATEGORIES, PROJECT_STATUSES } from "@/lib/constants";
+import { PROJECT_CATEGORIES, PROJECT_STATUSES, MONTHLY_REVENUE_OPTIONS, MONTHLY_USERS_OPTIONS } from "@/lib/constants";
 
 interface Props {
   initial?: Partial<Project>;
@@ -28,6 +28,8 @@ export function ProjectForm({
     githubUrl: initial?.githubUrl ?? "",
     contactEmail: initial?.contactEmail ?? "",
     contactNote: initial?.contactNote ?? "",
+    monthlyRevenue: initial?.monthlyRevenue ?? "",
+    monthlyUsers: initial?.monthlyUsers ?? "",
     category: initial?.category ?? "saas",
     status: initial?.status ?? "idea",
     screenshotUrl: initial?.screenshotUrl ?? "",
@@ -42,6 +44,8 @@ export function ProjectForm({
   const buildInput = (): CreateProjectInput => ({
     ...form,
     features: form.features.split("\n").filter((f) => f.trim()),
+    monthlyRevenue: (form.monthlyRevenue || undefined) as CreateProjectInput["monthlyRevenue"],
+    monthlyUsers: (form.monthlyUsers || undefined) as CreateProjectInput["monthlyUsers"],
   } as CreateProjectInput);
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -257,6 +261,46 @@ export function ProjectForm({
           <p className="text-xs text-gray-500 mt-1">
             List the main features or capabilities of your project
           </p>
+        </div>
+      </div>
+
+      {/* Traction */}
+      <div className="bg-white border border-gray-200 rounded-2xl p-8">
+        <h2 className="text-xl font-bold mb-2 text-gray-800">Traction</h2>
+        <p className="text-sm text-gray-500 mb-6">
+          Optional — helps the AI evaluator score commercial viability and signals real traction to potential acquirers.
+        </p>
+        <div className="grid grid-cols-1 gap-5 sm:grid-cols-2">
+          <div>
+            <label className="block text-sm font-medium mb-2 text-gray-700">
+              Monthly Revenue
+            </label>
+            <select
+              className={field}
+              value={form.monthlyRevenue}
+              onChange={(e) => set("monthlyRevenue", e.target.value)}
+            >
+              <option value="">Not disclosed</option>
+              {MONTHLY_REVENUE_OPTIONS.map((o) => (
+                <option key={o.value} value={o.value}>{o.label}</option>
+              ))}
+            </select>
+          </div>
+          <div>
+            <label className="block text-sm font-medium mb-2 text-gray-700">
+              Monthly Active Users
+            </label>
+            <select
+              className={field}
+              value={form.monthlyUsers}
+              onChange={(e) => set("monthlyUsers", e.target.value)}
+            >
+              <option value="">Not disclosed</option>
+              {MONTHLY_USERS_OPTIONS.map((o) => (
+                <option key={o.value} value={o.value}>{o.label}</option>
+              ))}
+            </select>
+          </div>
         </div>
       </div>
 

@@ -1,6 +1,6 @@
 import Head from "next/head";
 import { useRouter } from "next/router";
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { Layout } from "@/components/layout/Layout";
 import { exchangeCodeForTokens } from "@/lib/auth";
 import { useAuth } from "@/hooks/useAuth";
@@ -9,6 +9,7 @@ export default function CallbackPage() {
   const router = useRouter();
   const { reload } = useAuth();
   const [error, setError] = useState("");
+  const exchanged = useRef(false);
 
   useEffect(() => {
     if (!router.isReady) return;
@@ -21,6 +22,8 @@ export default function CallbackPage() {
     }
 
     if (!code || typeof code !== "string") return;
+    if (exchanged.current) return;
+    exchanged.current = true;
 
     const redirectUri = window.location.origin + "/auth/callback";
 

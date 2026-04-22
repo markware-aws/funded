@@ -19,7 +19,7 @@ const SORT_OPTIONS = [
 
 function ProjectItem({ project }: { project: Project }) {
   const { user, isAuthenticated } = useAuth();
-  const { toggle } = useLike(project.projectId);
+  const { toggle } = useLike(project.slug, project.projectId);
   return (
     <ProjectCard
       project={project}
@@ -57,7 +57,7 @@ export default function ProjectsPage() {
   const handleCreate = async (input: CreateProjectInput) => {
     const project = await createOrRedirect(input);
     await api.post(`/projects/${(project as any).projectId}/submit`, {});
-    router.push(`/projects/${(project as any).projectId ?? ""}`);
+    router.push(`/projects/${(project as any).slug ?? ""}`);
   };
 
   if (action === "new") {
@@ -68,7 +68,7 @@ export default function ProjectsPage() {
     return (
       <Layout>
         <Head><title>Submit Project — funded.gr</title></Head>
-        <div className="max-w-4xl mx-auto">
+        <div>
           <button
             onClick={() => router.back()}
             className="flex items-center gap-2 text-gray-500 hover:text-gray-700 mb-6 transition text-sm font-medium"

@@ -9,6 +9,8 @@ ProjectCategory = Literal[
 ProjectStatus = Literal["idea", "prototype", "launched", "scalable"]
 ReviewStatus = Literal["draft", "pending_review", "published", "rejected"]
 EvaluationStatus = Literal["not_requested", "pending", "complete", "failed"]
+MonthlyRevenue = Literal["pre-revenue", "<1k", "1k-5k", "5k-20k", "20k-50k", "50k+"]
+MonthlyUsers = Literal["<100", "100-1k", "1k-10k", "10k-50k", "50k+"]
 
 
 class Project(BaseModel):
@@ -19,12 +21,15 @@ class Project(BaseModel):
     description: str
     vision: str
     features: List[str]
+    slug: str
     websiteUrl: str
     githubUrl: Optional[str] = None
     githubStars: Optional[int] = None
     githubLastUpdated: Optional[str] = None
     contactEmail: str
     contactNote: Optional[str] = None
+    monthlyRevenue: Optional[MonthlyRevenue] = None
+    monthlyUsers: Optional[MonthlyUsers] = None
     category: ProjectCategory
     status: ProjectStatus
     likeCount: int = 0
@@ -32,6 +37,7 @@ class Project(BaseModel):
     reviewStatus: ReviewStatus = "pending_review"
     evaluationStatus: EvaluationStatus = "not_requested"
     evaluation: Optional[EvaluationRecord] = None
+    evaluationLockedUntil: Optional[str] = None
     createdAt: str
     updatedAt: str
 
@@ -53,6 +59,8 @@ class CreateProjectInput(BaseModel):
     screenshotUrl: Optional[str] = None
     contactEmail: str
     contactNote: Optional[str] = None
+    monthlyRevenue: Optional[MonthlyRevenue] = None
+    monthlyUsers: Optional[MonthlyUsers] = None
     category: ProjectCategory
     status: ProjectStatus
 
@@ -73,6 +81,8 @@ class UpdateProjectInput(BaseModel):
     screenshotUrl: Optional[str] = None
     contactEmail: Optional[str] = None
     contactNote: Optional[str] = None
+    monthlyRevenue: Optional[MonthlyRevenue] = None
+    monthlyUsers: Optional[MonthlyUsers] = None
     category: Optional[ProjectCategory] = None
     status: Optional[ProjectStatus] = None
 

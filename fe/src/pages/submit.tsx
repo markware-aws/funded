@@ -21,20 +21,26 @@ export default function SubmitPage() {
     return <Layout><div className="py-24 text-center text-gray-400">Loading…</div></Layout>;
   }
 
+  const handleSaveDraft = async (input: CreateProjectInput) => {
+    await api.post<Project>("/projects", input);
+    router.push("/profile");
+  };
+
   const handleCreate = async (input: CreateProjectInput) => {
     const project = await api.post<Project>("/projects", input);
-    router.push(`/projects/${(project as any).projectId}`);
+    await api.post(`/projects/${(project as any).projectId}/submit`, {});
+    router.push(`/projects/${(project as any).slug}`);
   };
 
   return (
     <Layout>
       <Head><title>Submit Project — funded.gr</title></Head>
-      <div className="max-w-2xl mx-auto">
+      <div>
         <h1 className="text-2xl font-bold text-gray-900 mb-2">Submit Your Project</h1>
         <p className="text-sm text-gray-500 mb-6">
           Your project will be reviewed before appearing publicly. Once approved you can request an AI evaluation.
         </p>
-        <ProjectForm onSubmit={handleCreate} />
+        <ProjectForm onSubmit={handleCreate} onSaveDraft={handleSaveDraft} />
       </div>
     </Layout>
   );

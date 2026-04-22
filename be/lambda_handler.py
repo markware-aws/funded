@@ -8,8 +8,12 @@ _api_handler = Mangum(app, lifespan="off")
 def handler(event: dict, context) -> dict:
     """Single Lambda entry point — routes by event shape."""
 
-    # Cognito Post Confirmation trigger
+    # Cognito triggers — route by triggerSource
     if "triggerSource" in event:
+        trigger = event.get("triggerSource", "")
+        if trigger.startswith("PreSignUp_"):
+            from app.triggers.pre_signup import handle
+            return handle(event, context)
         from app.triggers.post_confirmation import handle
         return handle(event, context)
 
