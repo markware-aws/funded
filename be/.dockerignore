@@ -1,0 +1,8 @@
+.env
+.env.docker
+package/
+**/__pycache__
+**/*.pyc
+.git
+README.md
+CLAUDE.md
