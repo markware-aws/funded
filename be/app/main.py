@@ -4,11 +4,15 @@ from fastapi.middleware.cors import CORSMiddleware
 from app.config import settings
 from app.routes import projects, likes, users, evaluation, admin, contact
 
-app = FastAPI(title="funded.gr API", version="1.0.0")
+app = FastAPI(title="funded.gr API", version="1.0.0", root_path="/api")
 
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=[settings.cors_origin],
+    allow_origins=[
+        "https://funded.gr",
+        "https://www.funded.gr",
+        "http://localhost:3000",
+    ],
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],

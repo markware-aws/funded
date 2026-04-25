@@ -12,7 +12,7 @@ from app.db import get_table
 from app.auth import get_current_user, require_auth
 from app.keys import (
     project_pk, PROJECT_SK, user_pk, USER_SK,
-    slug_pk, SLUG_SK,
+    slug_pk, SLUG_SK, like_sk,
     gsi1_project_pk, gsi1_likes_sk,
     gsi2_user_pk, gsi3_category_pk,
     GSI1_PK, GSI1_SK, GSI2_PK, GSI2_SK, GSI3_PK, GSI3_SK,
@@ -61,8 +61,19 @@ def _get_project(table, project_id: str) -> Optional[dict]:
 def _hydrate_liked(table, project: dict, user_id: Optional[str]) -> dict:
     if not user_id:
         return project
-    res = table.get_item(Key={"PK": project_pk(project["projectId"]), "SK": f"LIKE#{user_id}"})
+    res = table.get_item(Key={"PK": project_pk(project["projectId"]), "SK": like_sk(user_id)})
     return {**project, "likedByMe": "Item" in res}
+
+
+def _batch_hydrate_liked(table, projects: list[dict], user_id: str) -> list[dict]:
+    if not projects:
+        return projects
+    keys = [{"PK": project_pk(p["projectId"]), "SK": like_sk(user_id)} for p in projects]
+    response = table.meta.client.batch_get_item(
+        RequestItems={table.name: {"Keys": keys}}
+    )
+    liked_pks = {item["PK"] for item in response.get("Responses", {}).get(table.name, [])}
+    return [{**p, "likedByMe": project_pk(p["projectId"]) in liked_pks} for p in projects]
 
 
 @router.get("")
@@ -107,6 +118,9 @@ def list_projects(
     projects = res.get("Items", [])
     last_key = res.get("LastEvaluatedKey")
     next_cursor = base64.b64encode(json.dumps(last_key).encode()).decode() if last_key else None
+    user_id = claims.get("sub") if claims else None
+    if user_id and projects:
+        projects = _batch_hydrate_liked(table, projects, user_id)
     return {"projects": projects, "pagination": {"nextCursor": next_cursor, "limit": limit}}
 
 

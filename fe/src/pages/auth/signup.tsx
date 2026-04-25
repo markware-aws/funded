@@ -59,6 +59,14 @@ export default function SignUpPage() {
     <Layout>
       <Head><title>Sign Up — funded.gr</title></Head>
       <div className="mx-auto max-w-sm">
+        <div className="mb-6 rounded-xl border border-amber-200 bg-amber-50 px-4 py-3.5">
+          <p className="text-xs font-semibold text-amber-800 uppercase tracking-wide mb-1">🚧 Early Access — Not a 404</p>
+          <p className="text-sm text-amber-700 leading-relaxed">
+            funded.gr is still baking. You can sign up and submit your project now,
+            but listings won't go live until <strong>June 1, 2026</strong>.
+            Think of yourself as a founding member — we're just bad at throwing launch parties on time.
+          </p>
+        </div>
         <h1 className="text-2xl font-bold text-gray-900 mb-6">
           {step === "form" ? "Create account" : "Confirm your email"}
         </h1>
@@ -104,6 +112,15 @@ export default function SignUpPage() {
               <label className="block text-sm font-medium text-gray-700 mb-1">Password</label>
               <input className={field} type="password" value={password} onChange={(e) => setPassword(e.target.value)} required minLength={8} />
             </div>
+            <label className="flex items-start gap-2.5 cursor-pointer">
+              <input type="checkbox" required className="mt-0.5 h-3.5 w-3.5 flex-shrink-0 rounded border-gray-300 accent-brand-600" />
+              <span className="text-xs text-gray-500 leading-relaxed">
+                I have read and agree to the{" "}
+                <Link href="/legal/terms" target="_blank" className="text-brand-600 hover:underline">Terms of Service</Link>
+                {" "}and{" "}
+                <Link href="/legal/privacy" target="_blank" className="text-brand-600 hover:underline">Privacy Policy</Link>
+              </span>
+            </label>
             {error && <p className="text-sm text-red-600">{error}</p>}
             <button type="submit" disabled={loading}
               className="w-full rounded-lg bg-brand-600 px-4 py-2.5 text-sm font-medium text-white hover:bg-brand-700 disabled:opacity-50">

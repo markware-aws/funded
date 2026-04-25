@@ -32,10 +32,12 @@ export default function Home() {
 
   return (
     <Layout>
-      <Head><title>funded.gr — Greek Startup Showcase</title></Head>
+      <Head>
+        <title>funded.gr — Greek Startup Showcase</title>
+      </Head>
 
       {/* Stats */}
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-8">
+      {/* <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-8">
         <div className="bg-white border rounded-xl p-6 hover:shadow-md transition-shadow">
           <div className="flex items-center gap-3 mb-3">
             <div className="p-2 bg-blue-50 rounded-lg">
@@ -63,12 +65,15 @@ export default function Home() {
           </div>
           <p className="text-3xl font-bold tracking-tight">{stats.evaluated}</p>
         </div>
-      </div>
+      </div> */}
 
       {/* Projects */}
       <div className="flex justify-between items-center mb-6">
         <h2 className="font-bold text-2xl tracking-tight">Top Projects</h2>
-        <Link href="/projects" className="text-sm text-blue-600 hover:underline font-medium">
+        <Link
+          href="/projects"
+          className="text-sm text-blue-600 hover:underline font-medium"
+        >
           View all →
         </Link>
       </div>
@@ -77,7 +82,9 @@ export default function Home() {
         <div className="text-center text-gray-400 py-16 text-sm">Loading…</div>
       ) : projects.length === 0 ? (
         <div className="text-center py-16">
-          <p className="text-gray-500 mb-4">No projects yet. Be the first to submit!</p>
+          <p className="text-gray-500 mb-4">
+            No projects yet. Be the first to submit!
+          </p>
           <Link
             href="/projects?action=new"
             className="px-6 py-2.5 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition shadow-sm font-medium text-sm"

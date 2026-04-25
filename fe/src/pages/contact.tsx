@@ -107,6 +107,7 @@ export default function ContactPage() {
               data-sitekey={process.env.NEXT_PUBLIC_TURNSTILE_SITE_KEY}
               data-callback="onTurnstileSuccess"
               data-expired-callback="onTurnstileExpire"
+              data-size="flexible"
             />
           </div>
 

@@ -22,12 +22,12 @@ export function ProjectCard({ project, onLike, canLike }: Props) {
   return (
     <div className="bg-white border rounded-xl overflow-hidden hover:shadow-lg transition-all hover:border-blue-200">
       {project.screenshotUrl && (
-        <div className="w-full h-48 bg-gray-100 overflow-hidden">
+        <div className="w-full h-48 bg-gray-50 border-b flex items-center justify-center overflow-hidden">
           <img
             src={project.screenshotUrl}
             alt={project.name}
-            className="w-full h-full object-cover"
-            onError={(e) => { e.currentTarget.style.display = "none"; }}
+            className="w-full h-full object-cover object-top"
+            onError={(e) => { e.currentTarget.parentElement!.style.display = "none"; }}
           />
         </div>
       )}

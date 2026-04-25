@@ -1,4 +1,5 @@
-function handler(request) {
+function handler(event) {
+  var request = event.request;
   var uri = request.uri;
 
   // Pass static assets through unchanged

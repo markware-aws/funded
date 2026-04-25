@@ -168,12 +168,12 @@ export default function ProjectDetailPage() {
 
       {/* Screenshot */}
       {project.screenshotUrl && (
-        <div className="mb-10">
+        <div className="mb-10 flex justify-center bg-gray-50 border rounded-2xl overflow-hidden">
           <img
             src={project.screenshotUrl}
             alt={`${project.name} screenshot`}
-            className="w-full rounded-2xl border border-gray-200 shadow-sm"
-            onError={(e) => { e.currentTarget.style.display = "none"; }}
+            className="w-full max-h-[480px] object-cover object-top"
+            onError={(e) => { e.currentTarget.parentElement!.style.display = "none"; }}
           />
         </div>
       )}

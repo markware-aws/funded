@@ -16,7 +16,7 @@ export default function ProfilePage() {
   const tab = (router.query.tab as string) ?? "projects";
 
   const { data: myProjects } = useSWR<Project[]>(
-    isAuthenticated && tab === "projects" ? `/users/${user?.userId}/projects` : null,
+    isAuthenticated && !!user?.userId && tab === "projects" ? `/users/${user.userId}/projects` : null,
     fetcher
   );
 

@@ -18,9 +18,28 @@ def _now() -> str:
 @router.get("/me")
 def get_me(claims: dict = Depends(require_auth)):
     table = get_table()
-    item = table.get_item(Key={"PK": user_pk(claims["sub"]), "SK": USER_SK}).get("Item")
+    sub = claims["sub"]
+    item = table.get_item(Key={"PK": user_pk(sub), "SK": USER_SK}).get("Item")
     if not item:
-        raise HTTPException(404, detail={"code": "NOT_FOUND", "message": "User not found"})
+        # First login via social provider — create the record from JWT claims
+        from botocore.exceptions import ClientError
+        from boto3.dynamodb.conditions import Attr
+        email = claims.get("email", "")
+        name = claims.get("name", "") or email.split("@")[0]
+        now = _now()
+        item = {
+            "PK": user_pk(sub), "SK": USER_SK,
+            "userId": sub, "email": email, "name": name,
+            "hasProject": False, "role": "member",
+            "createdAt": now, "updatedAt": now,
+        }
+        try:
+            table.put_item(Item=item, ConditionExpression=Attr("PK").not_exists())
+        except ClientError as e:
+            if e.response["Error"]["Code"] == "ConditionalCheckFailedException":
+                item = table.get_item(Key={"PK": user_pk(sub), "SK": USER_SK}).get("Item")
+            else:
+                raise
     return item
 
 
