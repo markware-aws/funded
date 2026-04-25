@@ -19,23 +19,24 @@ export function Navbar() {
               <Code2 className="w-5 h-5 text-white" />
             </div>
             <div>
-              <p className="font-bold text-xl tracking-tight text-gray-800 leading-none">funded.gr</p>
-              <p className="text-xs text-gray-500 font-mono mt-0.5">Ελληνική κοινότητα καινοτομίας</p>
+              <p className="font-bold text-xl tracking-tight text-gray-800 leading-none">
+                funded.gr
+              </p>
+              <p className="text-xs text-gray-500 font-mono mt-0.5">
+                Ελληνική κοινότητα καινοτομίας
+              </p>
             </div>
           </Link>
 
           {/* Desktop nav */}
           <div className="hidden md:flex items-center gap-3">
-            <Link
-              href="/projects"
-              className="text-sm text-gray-600 hover:text-gray-900 font-medium transition"
-            >
-              Browse
-            </Link>
             {isAuthenticated ? (
               <>
                 {user?.role === "admin" && (
-                  <Link href="/admin" className="text-sm text-gray-600 hover:text-gray-900 font-medium transition">
+                  <Link
+                    href="/admin"
+                    className="text-sm text-gray-600 hover:text-gray-900 font-medium transition"
+                  >
                     Admin
                   </Link>
                 )}
@@ -48,7 +49,10 @@ export function Navbar() {
                 </Link>
                 <div className="flex items-center gap-2 px-4 py-2 border rounded-lg bg-white/80 backdrop-blur-sm">
                   <User className="w-4 h-4 text-gray-500" />
-                  <Link href="/profile" className="text-sm font-mono text-gray-700 hover:text-gray-900">
+                  <Link
+                    href="/profile"
+                    className="text-sm font-mono text-gray-700 hover:text-gray-900"
+                  >
                     {user?.name ?? user?.email?.split("@")[0]}
                   </Link>
                   <button
@@ -61,7 +65,10 @@ export function Navbar() {
               </>
             ) : (
               <>
-                <Link href="/auth/signin" className="text-sm text-gray-600 hover:text-gray-900 font-medium transition">
+                <Link
+                  href="/auth/signin"
+                  className="text-sm text-gray-600 hover:text-gray-900 font-medium transition"
+                >
                   Sign in
                 </Link>
                 <Link
@@ -80,20 +87,17 @@ export function Navbar() {
             onClick={() => setMobileOpen((o) => !o)}
             aria-label="Toggle menu"
           >
-            {mobileOpen ? <X className="w-5 h-5" /> : <Menu className="w-5 h-5" />}
+            {mobileOpen ? (
+              <X className="w-5 h-5" />
+            ) : (
+              <Menu className="w-5 h-5" />
+            )}
           </button>
         </div>
 
         {/* Mobile menu */}
         {mobileOpen && (
           <nav className="md:hidden mt-3 pb-3 flex flex-col gap-1 border-t border-black/[0.06] pt-3">
-            <Link
-              href="/projects"
-              onClick={close}
-              className="px-3 py-2 rounded-lg text-sm text-gray-700 hover:bg-black/5 font-medium transition"
-            >
-              Browse
-            </Link>
             {isAuthenticated ? (
               <>
                 {user?.role === "admin" && (
@@ -122,7 +126,10 @@ export function Navbar() {
                   {user?.name ?? user?.email?.split("@")[0]}
                 </Link>
                 <button
-                  onClick={() => { signOut(); close(); }}
+                  onClick={() => {
+                    signOut();
+                    close();
+                  }}
                   className="text-left px-3 py-2 rounded-lg text-sm text-gray-500 hover:bg-black/5 font-medium transition"
                 >
                   Logout
