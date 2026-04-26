@@ -22,7 +22,7 @@ class Project(BaseModel):
     vision: str
     features: List[str]
     slug: str
-    websiteUrl: str
+    websiteUrl: Optional[str] = None
     githubUrl: Optional[str] = None
     githubStars: Optional[int] = None
     githubLastUpdated: Optional[str] = None
@@ -35,6 +35,7 @@ class Project(BaseModel):
     likeCount: int = 0
     likedByMe: Optional[bool] = None
     reviewStatus: ReviewStatus = "pending_review"
+    rejectionReason: Optional[str] = None
     evaluationStatus: EvaluationStatus = "not_requested"
     evaluation: Optional[EvaluationRecord] = None
     evaluationLockedUntil: Optional[str] = None
@@ -54,7 +55,7 @@ class CreateProjectInput(BaseModel):
     description: str
     vision: str
     features: List[str]
-    websiteUrl: str
+    websiteUrl: Optional[str] = None
     githubUrl: Optional[str] = None
     screenshotUrl: Optional[str] = None
     contactEmail: str

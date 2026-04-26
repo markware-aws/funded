@@ -1,6 +1,7 @@
 from datetime import datetime, timezone, timedelta
 from pydantic_ai import Agent
 from pydantic_ai.models.openai import OpenAIModel
+from pydantic_ai.providers.openai import OpenAIProvider
 
 from app.db import get_table
 from app.keys import project_pk, PROJECT_SK, gsi4_score_sk, GSI4_PK, GSI4_SK
@@ -17,8 +18,8 @@ _agent: Agent[None, EvaluationResult] | None = None
 def _get_agent() -> Agent[None, EvaluationResult]:
     global _agent
     if _agent is None:
-        model = OpenAIModel(settings.openai_model, api_key=settings.openai_api_key)
-        _agent = Agent(model, result_type=EvaluationResult, system_prompt=SYSTEM_PROMPT)
+        model = OpenAIModel(settings.openai_model, provider=OpenAIProvider(api_key=settings.openai_api_key))
+        _agent = Agent(model, output_type=EvaluationResult, system_prompt=SYSTEM_PROMPT)
     return _agent
 
 
@@ -62,7 +63,7 @@ def handle(event: dict, context) -> None:
 
         import asyncio
         result = asyncio.run(_get_agent().run(_build_prompt(project)))
-        evaluation_result: EvaluationResult = result.data
+        evaluation_result: EvaluationResult = result.output
 
         record = EvaluationRecord(
             **evaluation_result.model_dump(),

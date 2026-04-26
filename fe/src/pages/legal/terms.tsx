@@ -2,7 +2,7 @@ import Head from "next/head";
 import Link from "next/link";
 import { Layout } from "@/components/layout/Layout";
 
-const LAST_UPDATED = "April 23, 2026";
+const LAST_UPDATED = "April 26, 2026";
 
 export default function TermsPage() {
   return (
@@ -91,9 +91,38 @@ export default function TermsPage() {
               Once an evaluation is completed, the project is locked for 30 days to preserve the integrity
               of the score. You acknowledge this lock period when requesting an evaluation.
             </p>
+            <p>
+              During the lock period, all editing and deletion of the project are disabled. After the
+              lock expires you may update your project and request a new evaluation. There is no lifetime
+              limit on evaluations, but only one evaluation cycle per 30-day period is permitted.
+            </p>
+            <p>
+              All project fields — including name, tagline, description, vision, key features, category,
+              status, and traction metrics — contribute to the evaluation score and are subject to the
+              lock. Contact details and links are stored alongside your project but do not affect
+              scoring; they remain editable whenever the project is not locked.
+            </p>
           </Section>
 
-          <Section title="6. Prohibited Conduct">
+          <Section title="6. Rejection &amp; Resubmission">
+            <p>
+              If your submission is rejected during admin review, you will receive a brief note explaining
+              the reason. This note is visible only to you, in your project dashboard.
+            </p>
+            <p>
+              You may address the feedback, edit your project accordingly, and resubmit for review at any
+              time. Each resubmission restarts the admin review process. There is no limit on
+              resubmissions; however, repeated bad-faith or unchanged resubmissions may result in account
+              suspension at our discretion.
+            </p>
+            <p>
+              Rejection does not affect a prior AI evaluation score. If your project had already received
+              an evaluation before being rejected, that score remains on record and the 30-day lock
+              period continues to apply.
+            </p>
+          </Section>
+
+          <Section title="7. Prohibited Conduct">
             <p>You agree not to:</p>
             <ul>
               <li>Post false, misleading, or defamatory content</li>
@@ -104,7 +133,7 @@ export default function TermsPage() {
             </ul>
           </Section>
 
-          <Section title="7. Disclaimer of Warranties">
+          <Section title="8. Disclaimer of Warranties">
             <p>
               funded.gr is provided "as is" and "as available" without warranties of any kind, either
               express or implied. We do not warrant that the platform will be uninterrupted, error-free,
@@ -112,7 +141,7 @@ export default function TermsPage() {
             </p>
           </Section>
 
-          <Section title="8. Limitation of Liability">
+          <Section title="9. Limitation of Liability">
             <p>
               To the maximum extent permitted by applicable law, funded.gr and its operators shall not be
               liable for any indirect, incidental, special, consequential, or punitive damages arising from
@@ -120,7 +149,7 @@ export default function TermsPage() {
             </p>
           </Section>
 
-          <Section title="9. Termination">
+          <Section title="10. Termination">
             <p>
               We reserve the right to suspend or terminate your account at any time for violation of these
               terms or for any other reason at our discretion. You may delete your account at any time by
@@ -128,7 +157,7 @@ export default function TermsPage() {
             </p>
           </Section>
 
-          <Section title="10. Changes to These Terms">
+          <Section title="11. Changes to These Terms">
             <p>
               We may update these Terms of Service from time to time. We will notify registered users of
               material changes by updating the "Last updated" date above. Continued use of the platform
@@ -136,7 +165,7 @@ export default function TermsPage() {
             </p>
           </Section>
 
-          <Section title="11. Governing Law">
+          <Section title="12. Governing Law">
             <p>
               These terms are governed by and construed in accordance with the laws of Greece, without
               regard to conflict of law principles. Any disputes arising from these terms or your use of
@@ -144,7 +173,7 @@ export default function TermsPage() {
             </p>
           </Section>
 
-          <Section title="12. Contact">
+          <Section title="13. Contact">
             <p>
               If you have any questions about these Terms, please{" "}
               <Link href="/contact" className="text-blue-600 hover:underline">contact us</Link>.

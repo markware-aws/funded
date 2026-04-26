@@ -1,14 +1,36 @@
 // ── Enums ─────────────────────────────────────────────────────────────────────
 
 export type UserRole = "member" | "admin";
-export type ReviewStatus = "draft" | "pending_review" | "published" | "rejected";
-export type EvaluationStatus = "not_requested" | "pending" | "complete" | "failed";
+export type ReviewStatus =
+  | "draft"
+  | "pending_review"
+  | "published"
+  | "rejected";
+export type EvaluationStatus =
+  | "not_requested"
+  | "pending"
+  | "complete"
+  | "failed";
 export type ReadinessLabel = "idea" | "prototype" | "launched" | "scalable";
-export type MonthlyRevenue = "pre-revenue" | "<1k" | "1k-5k" | "5k-20k" | "20k-50k" | "50k+";
+export type MonthlyRevenue =
+  | "pre-revenue"
+  | "<1k"
+  | "1k-5k"
+  | "5k-20k"
+  | "20k-50k"
+  | "50k+";
 export type MonthlyUsers = "<100" | "100-1k" | "1k-10k" | "10k-50k" | "50k+";
 export type ProjectCategory =
-  | "saas" | "marketplace" | "developer-tool" | "fintech" | "health"
-  | "education" | "e-commerce" | "ai-ml" | "mobile-app" | "other";
+  | "saas"
+  | "marketplace"
+  | "developer-tool"
+  | "fintech"
+  | "health"
+  | "education"
+  | "e-commerce"
+  | "ai-ml"
+  | "mobile-app"
+  | "other";
 export type ProjectStatus = "idea" | "prototype" | "launched" | "scalable";
 
 // ── Evaluation ────────────────────────────────────────────────────────────────
@@ -45,7 +67,6 @@ export interface User {
   name: string;
   avatarUrl?: string;
   githubUrl?: string;
-  twitterUrl?: string;
   hasProject: boolean;
   role: UserRole;
   createdAt: string;
@@ -57,7 +78,6 @@ export interface PublicUser {
   name: string;
   avatarUrl?: string;
   githubUrl?: string;
-  twitterUrl?: string;
   hasProject: boolean;
 }
 
@@ -72,7 +92,7 @@ export interface Project {
   description: string;
   vision: string;
   features: string[];
-  websiteUrl: string;
+  websiteUrl?: string;
   githubUrl?: string;
   githubStars?: number;
   githubLastUpdated?: string;
@@ -85,6 +105,7 @@ export interface Project {
   likeCount: number;
   likedByMe?: boolean;
   reviewStatus: ReviewStatus;
+  rejectionReason?: string;
   evaluationStatus: EvaluationStatus;
   evaluation?: Evaluation;
   evaluationLockedUntil?: string;
@@ -99,7 +120,7 @@ export interface CreateProjectInput {
   description: string;
   vision: string;
   features: string[];
-  websiteUrl: string;
+  websiteUrl?: string;
   githubUrl?: string;
   contactEmail: string;
   contactNote?: string;
@@ -115,9 +136,17 @@ export type UpdateProjectInput = Partial<CreateProjectInput>;
 // ── API ───────────────────────────────────────────────────────────────────────
 
 export type ApiErrorCode =
-  | "NOT_FOUND" | "UNAUTHORIZED" | "FORBIDDEN" | "BAD_REQUEST" | "INTERNAL_ERROR"
-  | "MUST_HAVE_PROJECT" | "NOT_OWNER" | "EVALUATION_ALREADY_REQUESTED"
-  | "PROJECT_NOT_PUBLISHED" | "ADMIN_ONLY" | "PROJECT_LOCKED";
+  | "NOT_FOUND"
+  | "UNAUTHORIZED"
+  | "FORBIDDEN"
+  | "BAD_REQUEST"
+  | "INTERNAL_ERROR"
+  | "MUST_HAVE_PROJECT"
+  | "NOT_OWNER"
+  | "EVALUATION_ALREADY_REQUESTED"
+  | "PROJECT_NOT_PUBLISHED"
+  | "ADMIN_ONLY"
+  | "PROJECT_LOCKED";
 
 export interface ApiError {
   code: ApiErrorCode;
@@ -129,7 +158,6 @@ export interface Pagination {
   nextCursor: string | null;
   limit: number;
 }
-
 
 export interface ProjectsListResponse {
   projects: Project[];

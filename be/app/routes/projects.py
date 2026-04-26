@@ -1,6 +1,7 @@
 import re
 import uuid
 import unicodedata
+import httpx
 from datetime import datetime, timezone
 from typing import Optional
 from fastapi import APIRouter, Depends, HTTPException, Query
@@ -20,6 +21,7 @@ from app.keys import (
     GSI_BY_LIKES, GSI_BY_USER, GSI_BY_CATEGORY, GSI_BY_SCORE,
 )
 from app.models.project import Project, CreateProjectInput, UpdateProjectInput
+from app.config import settings
 
 router = APIRouter(prefix="/projects", tags=["projects"])
 
@@ -51,6 +53,30 @@ def _reserve_slug(table, name: str, project_id: str) -> str:
 
 def _now() -> str:
     return datetime.now(timezone.utc).isoformat()
+
+
+def _fetch_github_stars(table, project_id: str, github_url: str) -> None:
+    match = re.search(r"github\.com/([^/]+/[^/]+)", github_url)
+    if not match:
+        return
+    repo = match.group(1).rstrip("/")
+    try:
+        with httpx.Client() as client:
+            r = client.get(
+                f"https://api.github.com/repos/{repo}",
+                headers={"Authorization": f"Bearer {settings.github_token}", "User-Agent": "funded-gr-bot"},
+                timeout=10,
+            )
+            if not r.is_success:
+                return
+            data = r.json()
+        table.update_item(
+            Key={"PK": project_pk(project_id), "SK": PROJECT_SK},
+            UpdateExpression="SET githubStars = :s, githubLastUpdated = :u",
+            ExpressionAttributeValues={":s": data["stargazers_count"], ":u": data["pushed_at"]},
+        )
+    except Exception as e:
+        print(f"Failed to fetch GitHub stars for {repo}: {e}")
 
 
 def _get_project(table, project_id: str) -> Optional[dict]:
@@ -161,6 +187,8 @@ def create_project(body: CreateProjectInput, claims: dict = Depends(require_auth
         "updatedAt": now,
     }
     table.put_item(Item=item)
+    if body.githubUrl:
+        _fetch_github_stars(table, project_id, body.githubUrl)
     return item
 
 

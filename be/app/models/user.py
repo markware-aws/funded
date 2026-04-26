@@ -10,7 +10,6 @@ class User(BaseModel):
     name: str
     avatarUrl: Optional[str] = None
     githubUrl: Optional[str] = None
-    twitterUrl: Optional[str] = None
     hasProject: bool = False
     role: UserRole = "member"
     createdAt: str
@@ -22,7 +21,6 @@ class PublicUser(BaseModel):
     name: str
     avatarUrl: Optional[str] = None
     githubUrl: Optional[str] = None
-    twitterUrl: Optional[str] = None
     hasProject: bool
 
 
@@ -30,4 +28,3 @@ class UpdateUserInput(BaseModel):
     name: Optional[str] = None
     avatarUrl: Optional[str] = None
     githubUrl: Optional[str] = None
-    twitterUrl: Optional[str] = None

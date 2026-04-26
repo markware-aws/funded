@@ -312,7 +312,7 @@ export function ProjectForm({
         <div className="space-y-5">
           <div>
             <label className="block text-sm font-medium mb-2 text-gray-700">
-              Website URL *
+              Website URL
             </label>
             <input
               type="url"
@@ -320,7 +320,6 @@ export function ProjectForm({
               value={form.websiteUrl}
               onChange={(e) => set("websiteUrl", e.target.value)}
               placeholder="https://myproject.com"
-              required
             />
           </div>
           <div>

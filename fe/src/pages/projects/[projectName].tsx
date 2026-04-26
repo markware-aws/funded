@@ -21,6 +21,7 @@ export default function ProjectDetailPage() {
   const { toggle } = useLike(slug, project?.projectId ?? "");
   const [evalRequested, setEvalRequested] = useState(false);
   const [showEvalModal, setShowEvalModal] = useState(false);
+  const [evalLoading, setEvalLoading] = useState(false);
 
   if (isLoading || !project) {
     return (
@@ -74,9 +75,14 @@ export default function ProjectDetailPage() {
   }
 
   const requestEvaluation = async () => {
-    await api.post(`/projects/${project.projectId}/evaluate`, {});
-    setEvalRequested(true);
-    setShowEvalModal(false);
+    setEvalLoading(true);
+    try {
+      await api.post(`/projects/${project.projectId}/evaluate`, {});
+      setEvalRequested(true);
+    } finally {
+      setEvalLoading(false);
+      setShowEvalModal(false);
+    }
   };
 
   return (
@@ -93,11 +99,16 @@ export default function ProjectDetailPage() {
             ? "bg-yellow-50 text-yellow-800 border border-yellow-200"
             : "bg-red-50 text-red-800 border border-red-200"
         )}>
-          {project.reviewStatus === "draft"
-            ? "This project is saved as a draft. Submit it for review when ready."
-            : project.reviewStatus === "pending_review"
-            ? "Your project is under review. It will appear publicly once approved."
-            : "Your project was rejected. Edit it and resubmit for review."}
+          {project.reviewStatus === "draft" && "This project is saved as a draft. Submit it for review when ready."}
+          {project.reviewStatus === "pending_review" && "Your project is under review. It will appear publicly once approved."}
+          {project.reviewStatus === "rejected" && (
+            <div>
+              <span>Your project was rejected. Edit it and resubmit for review.</span>
+              {project.rejectionReason && (
+                <p className="mt-1 font-normal opacity-75">{project.rejectionReason}</p>
+              )}
+            </div>
+          )}
         </div>
       )}
 
@@ -278,12 +289,18 @@ export default function ProjectDetailPage() {
                     </button>
                   )}
                   {(project.evaluationStatus === "pending" || evalRequested) && (
-                    <p className="text-xs text-gray-500 text-center">Evaluation requested — results available shortly.</p>
+                    <p className="text-xs text-gray-500 text-center">Your evaluation will be available shortly.</p>
                   )}
                   {project.evaluationStatus === "failed" && !evalRequested && (
                     <button onClick={() => setShowEvalModal(true)}
                       className="w-full rounded-lg border border-orange-300 px-4 py-2.5 text-sm text-orange-600 font-medium hover:bg-orange-50 transition">
                       Retry Evaluation
+                    </button>
+                  )}
+                  {project.evaluationStatus === "complete" && !isLocked && !evalRequested && (
+                    <button onClick={() => setShowEvalModal(true)}
+                      className="w-full rounded-lg border px-4 py-2.5 text-sm font-medium hover:bg-gray-50 transition">
+                      Request Re-evaluation
                     </button>
                   )}
                 </>
@@ -311,9 +328,10 @@ export default function ProjectDetailPage() {
               </button>
               <button
                 onClick={requestEvaluation}
-                className="flex-1 rounded-lg bg-blue-600 px-4 py-2.5 text-sm text-white font-medium hover:bg-blue-700 transition"
+                disabled={evalLoading}
+                className="flex-1 rounded-lg bg-blue-600 px-4 py-2.5 text-sm text-white font-medium hover:bg-blue-700 transition disabled:opacity-50"
               >
-                Confirm & Evaluate
+                {evalLoading ? "Requesting…" : "Confirm & Evaluate"}
               </button>
             </div>
           </div>

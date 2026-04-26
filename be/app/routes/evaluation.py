@@ -32,8 +32,12 @@ def trigger_evaluation(project_id: str, claims: dict = Depends(require_auth)):
         raise HTTPException(403, detail={"code": "NOT_OWNER", "message": "Not the project owner"})
     if project["reviewStatus"] != "published":
         raise HTTPException(400, detail={"code": "PROJECT_NOT_PUBLISHED", "message": "Project must be published before evaluation"})
-    if project["evaluationStatus"] in ("pending", "complete"):
-        raise HTTPException(400, detail={"code": "EVALUATION_ALREADY_REQUESTED", "message": "Evaluation already requested or complete"})
+    if project["evaluationStatus"] == "pending":
+        raise HTTPException(400, detail={"code": "EVALUATION_ALREADY_REQUESTED", "message": "Evaluation already in progress"})
+    if project["evaluationStatus"] == "complete":
+        locked_until = project.get("evaluationLockedUntil")
+        if locked_until and datetime.fromisoformat(locked_until) > datetime.now(timezone.utc):
+            raise HTTPException(423, detail={"code": "PROJECT_LOCKED", "message": f"Project is locked until {locked_until}"})
 
     now = datetime.now(timezone.utc).isoformat()
     table.update_item(
