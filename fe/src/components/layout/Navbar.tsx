@@ -47,7 +47,7 @@ export function Navbar() {
                   </Link>
                 )}
                 <Link
-                  href="/projects?action=new"
+                  href="/submit"
                   className="flex items-center gap-2 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition shadow-sm text-sm font-medium"
                 >
                   <PlusCircle className="w-4 h-4" />
@@ -123,7 +123,7 @@ export function Navbar() {
                   </Link>
                 )}
                 <Link
-                  href="/projects?action=new"
+                  href="/submit"
                   onClick={close}
                   className="flex items-center gap-2 px-3 py-2 rounded-lg text-sm text-blue-600 hover:bg-blue-50 font-medium transition"
                 >

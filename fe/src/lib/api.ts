@@ -35,6 +35,15 @@ async function request<T>(
     const error: ApiError =
       detail && typeof detail === "object" && detail.code
         ? detail
+        : Array.isArray(detail)
+          ? {
+              code: "BAD_REQUEST",
+              message: detail
+                .map((item) => item?.msg)
+                .filter(Boolean)
+                .join(" ") || "Invalid request",
+              details: detail,
+            }
         : { code: "INTERNAL_ERROR", message: typeof detail === "string" ? detail : "Unknown error" };
     throw new ApiClientError(error);
   }

@@ -1,30 +1,36 @@
 import Head from "next/head";
 import { useRouter } from "next/router";
+import { useEffect } from "react";
 import { Layout } from "@/components/layout/Layout";
 import { ProjectCard } from "@/components/projects/ProjectCard";
-import { ProjectForm } from "@/components/projects/ProjectForm";
 import { useProjects } from "@/hooks/useProjects";
 import { useLike } from "@/hooks/useLike";
 import { useAuth } from "@/hooks/useAuth";
-import { api, ApiClientError } from "@/lib/api";
+import { api } from "@/lib/api";
 import { PROJECT_CATEGORIES } from "@/lib/constants";
 import { cn } from "@/lib/utils";
-import { CreateProjectInput, Project } from "@/types";
+import { Project } from "@/types";
 
 const SORT_OPTIONS = [
-  { value: "likes", label: "Most Liked" },
-  { value: "score", label: "Top Scored" },
-  { value: "recent", label: "Most Recent" },
+  { value: "likes", label: "Most Liked", description: "Projects ranked by community likes." },
+  { value: "score", label: "Top Scored", description: "Projects ranked by completed AI evaluation score." },
+  { value: "recent", label: "Most Recent", description: "Newest approved projects first." },
 ];
 
 function ProjectItem({ project }: { project: Project }) {
   const { user, isAuthenticated } = useAuth();
   const { toggle } = useLike(project.slug, project.projectId);
+  const toggleSave = async () => {
+    if (project.savedByMe) await api.delete(`/projects/${project.projectId}/like/save`);
+    else await api.post(`/projects/${project.projectId}/like/save`, {});
+  };
   return (
     <ProjectCard
       project={project}
       canLike={isAuthenticated && !!user?.hasProject}
+      canSave={isAuthenticated}
       onLike={() => toggle(!!project.likedByMe, project.likeCount)}
+      onSave={toggleSave}
     />
   );
 }
@@ -34,56 +40,17 @@ export default function Projects() {
   const action = router.query.action as string | undefined;
   const sort = (router.query.sort as string) ?? "likes";
   const category = router.query.category as string | undefined;
-  const { isAuthenticated } = useAuth();
   const { data, isLoading } = useProjects(sort as any, category);
+  const activeSort = SORT_OPTIONS.find((option) => option.value === sort) ?? SORT_OPTIONS[0];
 
-  const createOrRedirect = async (input: CreateProjectInput): Promise<Project> => {
-    try {
-      return await api.post<Project>("/projects", input);
-    } catch (err) {
-      if (err instanceof ApiClientError && (err.error as any).code === "PROJECT_LIMIT_REACHED") {
-        router.push("/profile");
-        throw err;
-      }
-      throw err;
+  useEffect(() => {
+    if (action === "new") {
+      router.replace("/submit");
     }
-  };
-
-  const handleSaveDraft = async (input: CreateProjectInput) => {
-    await createOrRedirect(input);
-    router.push("/profile");
-  };
-
-  const handleCreate = async (input: CreateProjectInput) => {
-    const project = await createOrRedirect(input);
-    await api.post(`/projects/${(project as any).projectId}/submit`, {});
-    router.push(`/projects/${(project as any).slug ?? ""}`);
-  };
+  }, [action, router]);
 
   if (action === "new") {
-    if (!isAuthenticated) {
-      router.replace("/auth/signin?returnUrl=" + encodeURIComponent("/projects?action=new"));
-      return null;
-    }
-    return (
-      <Layout>
-        <Head>
-          <title>Submit Project — funded.gr</title>
-          <meta name="description" content="Submit your Greek startup to the funded.gr community showcase." />
-        </Head>
-        <div>
-          <button
-            onClick={() => router.back()}
-            className="flex items-center gap-2 text-gray-500 hover:text-gray-700 mb-6 transition text-sm font-medium"
-          >
-            ← Back
-          </button>
-          <h1 className="font-bold text-4xl mb-2 tracking-tight text-gray-800">Submit Your Project</h1>
-          <p className="text-lg text-gray-600 mb-8">Share your work with the Greek founders community</p>
-          <ProjectForm onSubmit={handleCreate} onSaveDraft={handleSaveDraft} onCancel={() => router.back()} />
-        </div>
-      </Layout>
-    );
+    return <Layout><div className="py-24 text-center text-gray-400">Redirecting...</div></Layout>;
   }
 
   return (
@@ -122,6 +89,9 @@ export default function Projects() {
           ))}
         </div>
       </div>
+      <p className="mb-6 max-w-2xl text-sm text-gray-500">
+        <span className="font-medium text-gray-700">{activeSort.label}:</span> {activeSort.description}
+      </p>
 
       {isLoading ? (
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
@@ -130,7 +100,17 @@ export default function Projects() {
           ))}
         </div>
       ) : data?.projects.length === 0 ? (
-        <div className="text-center text-gray-400 py-16 text-sm">No projects found.</div>
+        <div className="text-center py-16">
+          <p className="text-gray-400 text-sm mb-4">No projects found.</p>
+          {(category || sort !== "likes") && (
+            <button
+              onClick={() => router.push("/projects")}
+              className="rounded-lg border px-4 py-2 text-sm font-medium hover:bg-gray-50 transition"
+            >
+              Reset filters
+            </button>
+          )}
+        </div>
       ) : (
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
           {data?.projects.map((p) => <ProjectItem key={p.projectId} project={p} />)}

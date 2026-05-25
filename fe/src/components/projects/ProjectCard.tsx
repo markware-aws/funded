@@ -1,7 +1,7 @@
 import Link from "next/link";
-import { Heart, Star, Github, ExternalLink, Mail } from "lucide-react";
+import { Bookmark, Heart, Star, Github, ExternalLink, Mail } from "lucide-react";
 import { Project } from "@/types";
-import { cn } from "@/lib/utils";
+import { cn, formatRelativeDate } from "@/lib/utils";
 
 const READINESS_COLORS: Record<string, string> = {
   idea: "bg-gray-100 text-gray-600",
@@ -13,11 +13,14 @@ const READINESS_COLORS: Record<string, string> = {
 interface Props {
   project: Project;
   onLike?: () => void;
+  onSave?: () => void;
   canLike?: boolean;
+  canSave?: boolean;
 }
 
-export function ProjectCard({ project, onLike, canLike }: Props) {
+export function ProjectCard({ project, onLike, onSave, canLike, canSave }: Props) {
   const label = project.evaluation?.readinessLabel ?? project.status;
+  const githubUpdated = formatRelativeDate(project.githubLastUpdated);
 
   return (
     <div className="bg-white border rounded-xl overflow-hidden hover:shadow-lg transition-all hover:border-blue-200">
@@ -70,6 +73,21 @@ export function ProjectCard({ project, onLike, canLike }: Props) {
             <Heart className={cn("w-4 h-4", project.likedByMe && "fill-current")} />
             {project.likeCount}
           </button>
+          {onSave && (
+            <button
+              onClick={(e) => { e.preventDefault(); e.stopPropagation(); onSave(); }}
+              disabled={!canSave}
+              title={canSave ? undefined : "Sign in to save projects"}
+              className={cn(
+                "flex items-center gap-1 px-3 py-1 rounded-full text-sm transition",
+                project.savedByMe ? "bg-blue-50 text-blue-600" : "bg-gray-100 text-gray-600 hover:bg-gray-200",
+                !canSave && "opacity-50 cursor-not-allowed"
+              )}
+            >
+              <Bookmark className={cn("w-4 h-4", project.savedByMe && "fill-current")} />
+              Save
+            </button>
+          )}
         </div>
       </div>
 
@@ -111,6 +129,7 @@ export function ProjectCard({ project, onLike, canLike }: Props) {
             <Github className="w-4 h-4" />
             <span className="font-mono">{project.githubStars ?? 0}</span>
             <Star className="w-3 h-3 fill-current" />
+            {githubUpdated && <span className="text-xs text-gray-300">{githubUpdated}</span>}
           </a>
         )}
         {project.websiteUrl && (

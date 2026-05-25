@@ -14,6 +14,7 @@ from app.auth import get_current_user, require_auth
 from app.keys import (
     project_pk, PROJECT_SK, user_pk, USER_SK,
     slug_pk, SLUG_SK, like_sk,
+    saved_sk,
     gsi1_project_pk, gsi1_likes_sk,
     gsi2_user_pk, gsi3_category_pk,
     GSI1_PK, GSI1_SK, GSI2_PK, GSI2_SK, GSI3_PK, GSI3_SK,
@@ -87,8 +88,9 @@ def _get_project(table, project_id: str) -> Optional[dict]:
 def _hydrate_liked(table, project: dict, user_id: Optional[str]) -> dict:
     if not user_id:
         return project
-    res = table.get_item(Key={"PK": project_pk(project["projectId"]), "SK": like_sk(user_id)})
-    return {**project, "likedByMe": "Item" in res}
+    like_res = table.get_item(Key={"PK": project_pk(project["projectId"]), "SK": like_sk(user_id)})
+    save_res = table.get_item(Key={"PK": user_pk(user_id), "SK": saved_sk(project["projectId"])})
+    return {**project, "likedByMe": "Item" in like_res, "savedByMe": "Item" in save_res}
 
 
 def _batch_hydrate_liked(table, projects: list[dict], user_id: str) -> list[dict]:
@@ -99,7 +101,22 @@ def _batch_hydrate_liked(table, projects: list[dict], user_id: str) -> list[dict
         RequestItems={table.name: {"Keys": keys}}
     )
     liked_pks = {item["PK"] for item in response.get("Responses", {}).get(table.name, [])}
-    return [{**p, "likedByMe": project_pk(p["projectId"]) in liked_pks} for p in projects]
+    saved_keys = [{"PK": user_pk(user_id), "SK": saved_sk(p["projectId"])} for p in projects]
+    saved_response = table.meta.client.batch_get_item(
+        RequestItems={table.name: {"Keys": saved_keys}}
+    )
+    saved_ids = {
+        item["SK"].replace("SAVED#", "", 1)
+        for item in saved_response.get("Responses", {}).get(table.name, [])
+    }
+    return [
+        {
+            **p,
+            "likedByMe": project_pk(p["projectId"]) in liked_pks,
+            "savedByMe": p["projectId"] in saved_ids,
+        }
+        for p in projects
+    ]
 
 
 @router.get("")
@@ -240,6 +257,22 @@ def _check_lock(project: dict) -> None:
             )
 
 
+def _refresh_user_has_project(table, user_id: str, deleted_project_id: str) -> None:
+    res = table.query(
+        IndexName=GSI_BY_USER,
+        KeyConditionExpression=Key(GSI2_PK).eq(gsi2_user_pk(user_id)),
+    )
+    has_published_project = any(
+        item.get("projectId") != deleted_project_id and item.get("reviewStatus") == "published"
+        for item in res.get("Items", [])
+    )
+    table.update_item(
+        Key={"PK": user_pk(user_id), "SK": USER_SK},
+        UpdateExpression="SET hasProject = :has_project, updatedAt = :now",
+        ExpressionAttributeValues={":has_project": has_published_project, ":now": _now()},
+    )
+
+
 @router.put("/{project_id}")
 def update_project(
     project_id: str,
@@ -287,4 +320,5 @@ def delete_project(project_id: str, claims: dict = Depends(require_auth)):
         raise HTTPException(403, detail={"code": "NOT_OWNER", "message": "Not the project owner"})
     _check_lock(project)
     table.delete_item(Key={"PK": project_pk(project_id), "SK": PROJECT_SK})
+    _refresh_user_has_project(table, claims["sub"], project_id)
     return {"deleted": True}

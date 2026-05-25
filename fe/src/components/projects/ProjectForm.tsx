@@ -2,6 +2,7 @@ import { useRef, useState } from "react";
 import { Upload, X } from "lucide-react";
 import { CreateProjectInput, Project } from "@/types";
 import { PROJECT_CATEGORIES, PROJECT_STATUSES, MONTHLY_REVENUE_OPTIONS, MONTHLY_USERS_OPTIONS } from "@/lib/constants";
+import { ApiClientError } from "@/lib/api";
 
 interface Props {
   initial?: Partial<Project>;
@@ -59,7 +60,19 @@ export function ProjectForm({
         await onSubmit(buildInput());
       }
     } catch (err: unknown) {
-      setError(err instanceof Error ? err.message : "Something went wrong");
+      if (err instanceof ApiClientError) {
+        if ((err.error as any).code === "PROJECT_LIMIT_REACHED") {
+          setError("You have reached the maximum of 5 projects. Manage your existing projects from your profile.");
+        } else if ((err.error as any).code === "PROJECT_LOCKED") {
+          setError(err.error.message);
+        } else if (err.error.message.toLowerCase().includes("https")) {
+          setError("Website, GitHub, and screenshot URLs must start with https://.");
+        } else {
+          setError(err.error.message);
+        }
+      } else {
+        setError(err instanceof Error ? err.message : "Something went wrong");
+      }
     } finally {
       setLoading(false);
     }

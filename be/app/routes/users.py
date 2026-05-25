@@ -5,7 +5,7 @@ from fastapi import APIRouter, Depends, HTTPException
 from boto3.dynamodb.conditions import Key
 from app.db import get_table
 from app.auth import get_current_user, require_auth
-from app.keys import user_pk, USER_SK, GSI2_PK, GSI_BY_USER, gsi2_user_pk
+from app.keys import user_pk, USER_SK, project_pk, PROJECT_SK, GSI2_PK, GSI_BY_USER, gsi2_user_pk
 from app.models.user import UpdateUserInput
 
 router = APIRouter(prefix="/users", tags=["users"])
@@ -88,6 +88,23 @@ def get_my_project(claims: dict = Depends(require_auth)):
     return items[0] if items else None
 
 
+@router.get("/me/saved-projects")
+def get_my_saved_projects(claims: dict = Depends(require_auth)):
+    table = get_table()
+    res = table.query(
+        KeyConditionExpression=Key("PK").eq(user_pk(claims["sub"])) & Key("SK").begins_with("SAVED#"),
+    )
+    saved_items = res.get("Items", [])
+    projects = []
+    for saved in saved_items:
+        project = table.get_item(
+            Key={"PK": project_pk(saved["projectId"]), "SK": PROJECT_SK}
+        ).get("Item")
+        if project and project.get("reviewStatus") == "published":
+            projects.append({**project, "savedByMe": True})
+    return projects
+
+
 @router.get("/{user_id}/projects")
 def get_user_projects(user_id: str, claims: Optional[dict] = Depends(get_current_user)):
     table = get_table()
@@ -121,5 +138,9 @@ def get_user(user_id: str, claims: Optional[dict] = Depends(get_current_user)):
         "name": item["name"],
         "avatarUrl": item.get("avatarUrl"),
         "githubUrl": item.get("githubUrl"),
+        "websiteUrl": item.get("websiteUrl"),
+        "twitterUrl": item.get("twitterUrl"),
+        "linkedinUrl": item.get("linkedinUrl"),
+        "bio": item.get("bio"),
         "hasProject": item["hasProject"],
     }

@@ -1,15 +1,15 @@
 import Head from "next/head";
 import { useRouter } from "next/router";
 import { useState } from "react";
-import { ArrowLeft, Heart, ExternalLink, Github, Star, Mail, Calendar, Lock } from "lucide-react";
+import { ArrowLeft, Bookmark, Heart, ExternalLink, Github, Star, Mail, Calendar, Lock } from "lucide-react";
 import { Layout } from "@/components/layout/Layout";
 import { ProjectForm } from "@/components/projects/ProjectForm";
 import { EvaluationPanel } from "@/components/projects/EvaluationPanel";
 import { useProject } from "@/hooks/useProject";
 import { useLike } from "@/hooks/useLike";
 import { useAuth } from "@/hooks/useAuth";
-import { api } from "@/lib/api";
-import { cn } from "@/lib/utils";
+import { api, ApiClientError } from "@/lib/api";
+import { cn, formatRelativeDate } from "@/lib/utils";
 import { UpdateProjectInput } from "@/types";
 
 export default function ProjectDetailPage() {
@@ -22,6 +22,9 @@ export default function ProjectDetailPage() {
   const [evalRequested, setEvalRequested] = useState(false);
   const [showEvalModal, setShowEvalModal] = useState(false);
   const [evalLoading, setEvalLoading] = useState(false);
+  const [ownerError, setOwnerError] = useState("");
+  const [deleteLoading, setDeleteLoading] = useState(false);
+  const [saveLoading, setSaveLoading] = useState(false);
 
   if (isLoading || !project) {
     return (
@@ -35,12 +38,14 @@ export default function ProjectDetailPage() {
 
   const isOwner = user?.userId === project.userId;
   const canLike = isAuthenticated && !!user?.hasProject && !isOwner;
+  const canSave = isAuthenticated && !isOwner;
 
   const lockUntil = project.evaluationLockedUntil ? new Date(project.evaluationLockedUntil) : null;
   const isLocked = !!lockUntil && lockUntil > new Date();
   const lockDaysLeft = isLocked && lockUntil
     ? Math.ceil((lockUntil.getTime() - Date.now()) / 86_400_000)
     : 0;
+  const githubUpdated = formatRelativeDate(project.githubLastUpdated);
 
   if (action === "edit" && isOwner) {
     const isDraft = project.reviewStatus === "draft";
@@ -76,12 +81,42 @@ export default function ProjectDetailPage() {
 
   const requestEvaluation = async () => {
     setEvalLoading(true);
+    setOwnerError("");
     try {
       await api.post(`/projects/${project.projectId}/evaluate`, {});
       setEvalRequested(true);
+    } catch (err) {
+      setOwnerError(err instanceof ApiClientError ? err.error.message : "Could not request evaluation.");
     } finally {
       setEvalLoading(false);
       setShowEvalModal(false);
+    }
+  };
+
+  const deleteProject = async () => {
+    const typedName = window.prompt(`Type ${project.name} to delete this project.`);
+    if (typedName !== project.name) return;
+    setOwnerError("");
+    setDeleteLoading(true);
+    try {
+      await api.delete(`/projects/${project.projectId}`);
+      router.replace("/profile");
+    } catch (err) {
+      setOwnerError(err instanceof ApiClientError ? err.error.message : "Could not delete project.");
+    } finally {
+      setDeleteLoading(false);
+    }
+  };
+
+  const toggleSave = async () => {
+    if (!canSave) return;
+    setSaveLoading(true);
+    try {
+      if (project.savedByMe) await api.delete(`/projects/${project.projectId}/like/save`);
+      else await api.post(`/projects/${project.projectId}/like/save`, {});
+      mutate({ ...project, savedByMe: !project.savedByMe }, false);
+    } finally {
+      setSaveLoading(false);
     }
   };
 
@@ -150,6 +185,19 @@ export default function ProjectDetailPage() {
                 <Heart className={cn("w-5 h-5", project.likedByMe && "fill-current")} />
                 <span className="font-semibold">{project.likeCount}</span>
               </button>
+              <button
+                onClick={toggleSave}
+                disabled={!canSave || saveLoading}
+                title={canSave ? undefined : "Sign in to save projects"}
+                className={cn(
+                  "flex items-center gap-2 px-4 py-2 rounded-lg transition",
+                  project.savedByMe ? "text-blue-600" : "text-gray-500 hover:text-blue-600",
+                  (!canSave || saveLoading) && "opacity-50 cursor-not-allowed"
+                )}
+              >
+                <Bookmark className={cn("w-5 h-5", project.savedByMe && "fill-current")} />
+                <span className="font-semibold">{project.savedByMe ? "Saved" : "Save"}</span>
+              </button>
             </div>
           </div>
 
@@ -170,6 +218,7 @@ export default function ProjectDetailPage() {
                 <div className="flex items-center gap-1.5">
                   <Star className="w-4 h-4 fill-current text-gray-400" />
                   <span className="font-mono">{project.githubStars} stars</span>
+                  {githubUpdated && <span>({githubUpdated})</span>}
                 </div>
               </>
             )}
@@ -234,7 +283,7 @@ export default function ProjectDetailPage() {
               {project.githubUrl && (
                 <a href={project.githubUrl} target="_blank" rel="noopener noreferrer"
                   className="flex items-center gap-2 text-gray-600 hover:text-gray-900 transition text-sm">
-                  <Github className="w-4 h-4" /> GitHub
+                  <Github className="w-4 h-4" /> GitHub {githubUpdated && <span className="text-xs text-gray-400">({githubUpdated})</span>}
                 </a>
               )}
               {project.websiteUrl && (
@@ -265,6 +314,11 @@ export default function ProjectDetailPage() {
           {isOwner && (
             <div className="pt-6 border-t border-gray-200 space-y-3">
               <p className="text-sm font-semibold text-gray-700">Your Project</p>
+              {ownerError && (
+                <div className="rounded-lg border border-red-200 bg-red-50 px-3 py-2.5 text-xs text-red-700">
+                  {ownerError}
+                </div>
+              )}
 
               {isLocked ? (
                 <div className="flex items-start gap-2 rounded-lg bg-amber-50 border border-amber-200 px-3 py-2.5 text-xs text-amber-700">
@@ -289,7 +343,7 @@ export default function ProjectDetailPage() {
                     </button>
                   )}
                   {(project.evaluationStatus === "pending" || evalRequested) && (
-                    <p className="text-xs text-gray-500 text-center">Your evaluation will be available shortly.</p>
+                    <p className="text-xs text-gray-500 text-center">Evaluation will be available shortly, please check back in a few minutes.</p>
                   )}
                   {project.evaluationStatus === "failed" && !evalRequested && (
                     <button onClick={() => setShowEvalModal(true)}
@@ -304,6 +358,15 @@ export default function ProjectDetailPage() {
                     </button>
                   )}
                 </>
+              )}
+              {!isLocked && (
+                <button
+                  onClick={deleteProject}
+                  disabled={deleteLoading}
+                  className="w-full rounded-lg border border-red-200 px-4 py-2.5 text-sm font-medium text-red-600 hover:bg-red-50 transition disabled:opacity-50"
+                >
+                  {deleteLoading ? "Deleting..." : "Delete Project"}
+                </button>
               )}
             </div>
           )}

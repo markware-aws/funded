@@ -23,8 +23,11 @@ BE/package/
 
 # AWS
 cdk.out/
+scripts/
 
+# LLMS
 .claude
-/scripts
+.cursorrules
+AGENTS.md
 CLAUDE.md
 /docs

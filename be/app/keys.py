@@ -12,6 +12,9 @@ def like_sk(user_id: str) -> str:
 def liked_sk(project_id: str) -> str:
     return f"LIKED#{project_id}"
 
+def saved_sk(project_id: str) -> str:
+    return f"SAVED#{project_id}"
+
 USER_SK = "PROFILE"
 PROJECT_SK = "METADATA"
 
@@ -62,3 +65,8 @@ def contact_pk(contact_id: str) -> str:
     return f"CONTACT#{contact_id}"
 
 CONTACT_SK = "MESSAGE"
+
+def admin_audit_pk(audit_id: str) -> str:
+    return f"ADMIN_AUDIT#{audit_id}"
+
+ADMIN_AUDIT_SK = "ACTION"

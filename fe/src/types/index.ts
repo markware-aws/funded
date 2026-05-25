@@ -67,6 +67,10 @@ export interface User {
   name: string;
   avatarUrl?: string;
   githubUrl?: string;
+  websiteUrl?: string;
+  twitterUrl?: string;
+  linkedinUrl?: string;
+  bio?: string;
   hasProject: boolean;
   role: UserRole;
   createdAt: string;
@@ -78,6 +82,10 @@ export interface PublicUser {
   name: string;
   avatarUrl?: string;
   githubUrl?: string;
+  websiteUrl?: string;
+  twitterUrl?: string;
+  linkedinUrl?: string;
+  bio?: string;
   hasProject: boolean;
 }
 
@@ -104,6 +112,7 @@ export interface Project {
   status: ProjectStatus;
   likeCount: number;
   likedByMe?: boolean;
+  savedByMe?: boolean;
   reviewStatus: ReviewStatus;
   rejectionReason?: string;
   evaluationStatus: EvaluationStatus;
@@ -146,7 +155,8 @@ export type ApiErrorCode =
   | "EVALUATION_ALREADY_REQUESTED"
   | "PROJECT_NOT_PUBLISHED"
   | "ADMIN_ONLY"
-  | "PROJECT_LOCKED";
+  | "PROJECT_LOCKED"
+  | "PROJECT_LIMIT_REACHED";
 
 export interface ApiError {
   code: ApiErrorCode;

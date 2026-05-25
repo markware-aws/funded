@@ -7,7 +7,7 @@ from app.db import get_table
 from app.auth import require_auth
 from app.keys import (
     user_pk, USER_SK, project_pk, PROJECT_SK,
-    like_sk, liked_sk, gsi1_likes_sk, GSI1_SK,
+    like_sk, liked_sk, saved_sk, gsi1_likes_sk, GSI1_SK,
 )
 
 router = APIRouter(prefix="/projects/{project_id}/like", tags=["likes"])
@@ -76,3 +76,26 @@ def unlike_project(project_id: str, claims: dict = Depends(require_auth)):
     )
     table.delete_item(Key={"PK": user_pk(claims["sub"]), "SK": liked_sk(project_id)})
     return {"likeCount": res["Attributes"]["likeCount"]}
+
+
+@router.post("/save")
+def save_project(project_id: str, claims: dict = Depends(require_auth)):
+    table = get_table()
+    project = table.get_item(Key={"PK": project_pk(project_id), "SK": PROJECT_SK}).get("Item")
+    if not project or project["reviewStatus"] != "published":
+        raise HTTPException(404, detail={"code": "NOT_FOUND", "message": "Project not found"})
+    table.put_item(Item={
+        "PK": user_pk(claims["sub"]),
+        "SK": saved_sk(project_id),
+        "projectId": project_id,
+        "userId": claims["sub"],
+        "createdAt": _now(),
+    })
+    return {"saved": True}
+
+
+@router.delete("/save")
+def unsave_project(project_id: str, claims: dict = Depends(require_auth)):
+    table = get_table()
+    table.delete_item(Key={"PK": user_pk(claims["sub"]), "SK": saved_sk(project_id)})
+    return {"saved": False}

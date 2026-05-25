@@ -16,6 +16,7 @@ import { ProjectCard } from "@/components/projects/ProjectCard";
 import { useProjects } from "@/hooks/useProjects";
 import { useLike } from "@/hooks/useLike";
 import { useAuth } from "@/hooks/useAuth";
+import { api } from "@/lib/api";
 import { API_BASE_URL } from "@/lib/constants";
 import { Project } from "@/types";
 
@@ -53,11 +54,17 @@ function ProjectCardSkeleton() {
 function ProjectItem({ project }: { project: Project }) {
   const { user, isAuthenticated } = useAuth();
   const { toggle } = useLike(project.slug, project.projectId);
+  const toggleSave = async () => {
+    if (project.savedByMe) await api.delete(`/projects/${project.projectId}/like/save`);
+    else await api.post(`/projects/${project.projectId}/like/save`, {});
+  };
   return (
     <ProjectCard
       project={project}
       canLike={isAuthenticated && !!user?.hasProject}
+      canSave={isAuthenticated}
       onLike={() => toggle(!!project.likedByMe, project.likeCount)}
+      onSave={toggleSave}
     />
   );
 }
