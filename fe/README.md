@@ -1,6 +1,8 @@
 # funded.gr — Frontend
 
-Next.js 14 (Pages Router) + Tailwind CSS + SWR.
+Next.js (Pages Router) + Tailwind CSS + SWR.
+
+See [`../README.md`](../README.md) for the full local setup guide.
 
 ## Prerequisites
 
@@ -13,15 +15,8 @@ Next.js 14 (Pages Router) + Tailwind CSS + SWR.
 ```bash
 cd fe
 npm install
-```
-
-Create `.env.development` (already tracked in repo — fill in your values):
-
-```
-NEXT_PUBLIC_API_BASE_URL=http://localhost:8000
-NEXT_PUBLIC_COGNITO_USER_POOL_ID=eu-central-1_XXXXXXXXX
-NEXT_PUBLIC_COGNITO_CLIENT_ID=XXXXXXXXXXXXXXXXXXXXXXXXXX
-NEXT_PUBLIC_COGNITO_DOMAIN=auth.funded.gr
+cp env.development.example .env.development
+# Edit .env.development with your Cognito and API values
 ```
 
 ## Run

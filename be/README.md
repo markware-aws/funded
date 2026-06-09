@@ -2,13 +2,15 @@
 
 FastAPI + Mangum, deployed as a single AWS Lambda. PydanticAI for AI evaluation, DynamoDB single-table design.
 
+See [`../README.md`](../README.md) for the full local setup guide.
+
 ## Local development (Docker)
 
 The recommended way to run locally. Points at real AWS DynamoDB.
 
 ```bash
 cd be
-cp .env.docker .env.docker.local   # optional: keep a local override
+cp env.docker.example .env.docker
 # Edit .env.docker and fill in real values (see Environment Variables below)
 
 docker compose up --build
@@ -42,7 +44,7 @@ pip install -r requirements.txt uvicorn[standard]
 uvicorn app.main:app --reload --port 8000
 ```
 
-Set the same environment variables from `.env.docker` in your shell or a local `.env` file.
+Copy `env.docker.example` to `.env` and fill in the same values.
 
 ## Deploy to Lambda
 
